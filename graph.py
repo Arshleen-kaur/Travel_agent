@@ -53,7 +53,7 @@ def extract_preferences(state: TravelState) -> TravelState:
         return input("Enter the city you want to travel to: ")
     state["city"] = input_city()
     def input_budget()-> float:
-        return float(input("Enter your budget for the trip: "))
+        return float(input("Enter your budget for the trip (excluding hotel and flight costs): "))
     state["budget"] = input_budget()
     def input_currency()-> str:
         return input("Enter your preferred currency (e.g., USD, EUR): ")
@@ -154,6 +154,7 @@ def itinerary_planner(state: TravelState) -> TravelState:
     - Optimize travel time by grouping nearby attractions.
     - Include breakfast, lunch, dinner, and sightseeing.
     - Respect hotel check-in and check-out times.
+    - The budget is exclusive of hotel costs, and flights which are already covered.
     - Stay within the given budget.
     - Include approximate timings.
     - Suggest transportation between places.
