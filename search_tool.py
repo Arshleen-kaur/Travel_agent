@@ -2,9 +2,10 @@ from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_tavily import TavilySearch
 from langchain_community.utilities import GoogleSerperAPIWrapper
 from dotenv import load_dotenv
+from langchain_core.tools import tool
 import requests
 import os
-
+from state import TravelState
 load_dotenv()
 
 
@@ -77,3 +78,8 @@ class SearchTool:
 
         raise Exception("All search providers failed.")
 
+
+@tool
+def web_search(query: str) -> str:
+    """Search the web for travel-related information."""
+    return str(SearchTool().search(query))

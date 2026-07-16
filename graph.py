@@ -6,7 +6,10 @@ from langchain_community.tools import DuckDuckGoSearchResults
 import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from search_tool import SearchTool
+from search_tool import SearchTool,web_search
+from state import TravelState
+from guardrails import extract_preferences
+
 load_dotenv()
 
 MAX_CRITIC_ATTEMPTS = 3
@@ -22,62 +25,15 @@ llm = ChatOpenAI(
 )
 researcher = create_agent(
     model=llm,
-    tools=[search_tool],
+    tools=[web_search],
     system_prompt="""
 You are a travel research agent.
 Use the search tool to research the user's travel preferences.
 Return concise recommendations.
 """
 )
-class TravelState(TypedDict):
-    city: str
-    country: str
-    itinerary: str
-    budget: float
-    currency: str
-    preferences: list[str]
-    start_date: date
-    end_date: date
-    hotel_checkin: time
-    hotel_checkout: time
-    research_results: list[str]
-    critic_feedback: str
-    critic_attempts: int
- 
-graph= StateGraph(TravelState)
 
-def extract_preferences(state: TravelState) -> TravelState:
-    def input_country()-> str:
-        return input("Enter the country you want to travel to: ")
-    state["country"] = input_country()
-    def input_city()-> str:
-        return input("Enter the city you want to travel to: ")
-    state["city"] = input_city()
-    def input_budget()-> float:
-        return float(input("Enter your budget for the trip (excluding hotel and flight costs): "))
-    state["budget"] = input_budget()
-    def input_currency()-> str:
-        return input("Enter your preferred currency (e.g., USD, EUR): ")
-    state["currency"] = input_currency()
-    def input_number_of_members()-> int:
-        return int(input("Enter the number of members traveling: "))
-    state["number_of_members"] = input_number_of_members()
-    def input_preferences()-> list[str]:
-        return input("Enter your preferences for the trip (comma-separated): ").split(",")
-    state["preferences"] = input_preferences()
-    def input_start_date()-> date:
-        return date.fromisoformat(input("Enter the start date for the trip (YYYY-MM-DD): "))
-    state["start_date"] = input_start_date()
-    def input_end_date()-> date:
-        return date.fromisoformat(input("Enter the end date for the trip (YYYY-MM-DD): "))
-    state["end_date"] = input_end_date()
-    def input_hotel_checkin()-> time:
-        return time.fromisoformat(input("Enter the hotel check-in time (HH:MM): "))
-    state["hotel_checkin"] = input_hotel_checkin()
-    def input_hotel_checkout()-> time:
-        return time.fromisoformat(input("Enter the hotel check-out time (HH:MM): "))
-    state["hotel_checkout"] = input_hotel_checkout()
-    return state
+graph= StateGraph(TravelState)
 
 def research_agent(state: TravelState) -> TravelState:
     city = state["city"]
