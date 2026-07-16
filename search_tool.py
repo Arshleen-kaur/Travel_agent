@@ -1,7 +1,8 @@
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_tavily import TavilySearch
 from langchain_community.utilities import GoogleSerperAPIWrapper
-
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from .env file
 
 class SearchTool:
     def __init__(self):
@@ -38,8 +39,5 @@ class SearchTool:
         raise Exception("All search providers failed.")
 
 
-# Example
-search_tool = SearchTool()
 
-results = search_tool.search("Latest GenAI trends")
-print(results)
+print(TavilySearch(max_results=5).invoke("Love in chandigarh"))
