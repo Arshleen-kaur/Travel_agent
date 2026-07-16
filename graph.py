@@ -6,11 +6,12 @@ from langchain_community.tools import DuckDuckGoSearchResults
 import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from search_tool import SearchTool
 load_dotenv()
 
 MAX_CRITIC_ATTEMPTS = 3
 
-search_tool = DuckDuckGoSearchResults(output_format="list")
+search_tool = SearchTool()
 
 llm = ChatOpenAI(
     model="tencent/hy3:free",
@@ -77,7 +78,7 @@ def extract_preferences(state: TravelState) -> TravelState:
         return time.fromisoformat(input("Enter the hotel check-out time (HH:MM): "))
     state["hotel_checkout"] = input_hotel_checkout()
     return state
-print("Searching the web for travel recommendations...")
+
 def research_agent(state: TravelState) -> TravelState:
     city = state["city"]
     preferences = state["preferences"]
@@ -110,7 +111,7 @@ def research_agent(state: TravelState) -> TravelState:
 
     state["research_results"] = research_results
     return state
-print("Planning your itinerary...")
+
 def itinerary_planner(state: TravelState) -> TravelState:
     previous_itinerary = state.get("itinerary", "")
     critic_feedback = state.get("critic_feedback", "")
@@ -168,7 +169,7 @@ def itinerary_planner(state: TravelState) -> TravelState:
     state["itinerary"] = response.content
 
     return state
-print("Critiquing the itinerary...")
+
 def critic_router(state: TravelState) -> str:
     # Stop if maximum retries have been reached
     if state["critic_attempts"] >= MAX_CRITIC_ATTEMPTS:
