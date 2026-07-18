@@ -76,9 +76,11 @@ def extract_preferences(state: TravelState) -> TravelState:
         "Enter your preferred currency (e.g., USD, EUR): "
     )
 
-    state["number_of_members"] = int(
+    members = int(
         input("Enter the number of members traveling: ")
     )
+    state["number_of_members"] = members
+    state["members"] = members
 
     prefs = validated_text_input(
         "Enter your preferences (comma-separated): "
@@ -96,10 +98,15 @@ def extract_preferences(state: TravelState) -> TravelState:
         input("Enter the end date (YYYY-MM-DD): ")
     )
 
+    state["has_hotel"] = input("Do you have a hotel booked? (yes/no): ").strip().lower() == "yes"
+    if state["has_hotel"]:
+        state["hotel_name"] = validated_text_input(
+            "Enter the name of your hotel: "
+        )
+    
     state["hotel_checkin"] = time.fromisoformat(
         input("Enter hotel check-in time (HH:MM): ")
     )
-
     state["hotel_checkout"] = time.fromisoformat(
         input("Enter hotel check-out time (HH:MM): ")
     )

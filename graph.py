@@ -11,6 +11,7 @@ from guardrails import extract_preferences
 from research_agent import research_agent
 from researcher import researcher
 from llm_config import llm
+from hotel_agent import hotel_agent
 
 load_dotenv()
 
@@ -34,6 +35,8 @@ def itinerary_planner(state: TravelState) -> TravelState:
 
     Start Date: {state["start_date"]}
     End Date: {state["end_date"]}
+
+    hotel Name: {state["hotel_name"]}
 
     Hotel Check-in: {state["hotel_checkin"]}
     Hotel Check-out: {state["hotel_checkout"]}
@@ -95,7 +98,11 @@ def critic_router(state: TravelState) -> str:
 
     print(f"🔄 Itinerary not approved. Retrying ({state['critic_attempts']}/{MAX_CRITIC_ATTEMPTS})...")
     return "rewrite"
+def hotel_router(state):
+    if state["has_hotel"]:
+        return "research"
 
+    return "hotel_search"
 def critic_agent(state: TravelState) -> TravelState:
     # Initialize if it doesn't exist
     if "critic_attempts" not in state:
@@ -138,13 +145,23 @@ def critic_agent(state: TravelState) -> TravelState:
     state["critic_attempts"] += 1
 
     return state
+
 graph.add_node("extract_preferences",extract_preferences)
+graph.add_node("hotel_agent", hotel_agent)
 graph.add_node("research_agent",research_agent)
 graph.add_node("itinerary_planner",itinerary_planner)
 graph.add_node("critic_agent",critic_agent)
 
 graph.add_edge(START, "extract_preferences")
-graph.add_edge("extract_preferences", "research_agent")
+graph.add_conditional_edges(
+    "extract_preferences",
+    hotel_router,
+    {
+        "research": "research_agent",
+        "hotel_search": "hotel_agent",
+    },
+)
+graph.add_edge("hotel_agent", "research_agent")
 graph.add_edge("research_agent", "itinerary_planner")
 graph.add_edge("itinerary_planner", "critic_agent")
 graph.add_conditional_edges(
