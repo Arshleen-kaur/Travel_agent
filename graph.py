@@ -1,7 +1,6 @@
 from langgraph.graph import StateGraph, START, END
 from typing import TypedDict
 from datetime import date, time
-from langchain.agents import create_agent
 from langchain_community.tools import DuckDuckGoSearchResults
 import os
 from dotenv import load_dotenv
@@ -9,6 +8,9 @@ from langchain_openai import ChatOpenAI
 from search_tool import SearchTool,web_search
 from state import TravelState
 from guardrails import extract_preferences
+from research_agent import research_agent
+from researcher import researcher
+from llm_config import llm
 
 load_dotenv()
 
@@ -16,59 +18,11 @@ MAX_CRITIC_ATTEMPTS = 3
 
 search_tool = SearchTool()
 
-llm = ChatOpenAI(
-    model="tencent/hy3:free",
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENAI_API_KEY"),
-    temperature=0.8,
-    streaming=True
-)
-researcher = create_agent(
-    model=llm,
-    tools=[web_search],
-    system_prompt="""
-You are a travel research agent.
-Use the search tool to research the user's travel preferences.
-Return concise recommendations.
-"""
-)
-
 graph= StateGraph(TravelState)
 
-def research_agent(state: TravelState) -> TravelState:
-    city = state["city"]
-    preferences = state["preferences"]
-
-    research_results = []
-
-    for preference in preferences:
-        print(f"🔍 Searching {preference} in {city}...")
-        prompt = f"""
-        Search the web for the best {preference} in {city}.
-        Include:
-        - Top places
-        - Why they are recommended
-        - Approximate timings if available
-        - Approximate cost if available
-        """
-        response = researcher.invoke(
-            {
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ]
-            }
-        )
-        print(f"✅ Finished searching {preference}")
-
-        research_results.append(response["messages"][-1].content)
-
-    state["research_results"] = research_results
-    return state
 
 def itinerary_planner(state: TravelState) -> TravelState:
+    print("Entered itinerary_planner")
     previous_itinerary = state.get("itinerary", "")
     critic_feedback = state.get("critic_feedback", "")
 
@@ -119,11 +73,11 @@ def itinerary_planner(state: TravelState) -> TravelState:
     - End each day with the estimated daily cost.
     - Return ONLY the final improved itinerary in Markdown.
     """
-
+    print("Invoking llm for itinerary planning...")
     response = llm.invoke(prompt)
-
+    print("Itinerary planning completed.")
     state["itinerary"] = response.content
-
+    print("LEAVING itinerary_planner")
     return state
 
 def critic_router(state: TravelState) -> str:
